@@ -1,0 +1,2 @@
+{"chave": "1", "maquina": "10", "registro_bloquear": "111", "data_bloquear": "26-11-2023 11:44:29", "verificador_bloqueio": "", "verificador_data_bloqueio": ""}
+{"chave": "3", "maquina": "4444", "registro_bloquear": "2", "data_bloquear": "111", "verificador_bloqueio": "", "verificador_data_bloqueio": ""}

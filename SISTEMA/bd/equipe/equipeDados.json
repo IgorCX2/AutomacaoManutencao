@@ -1,0 +1,10 @@
+[
+    {"Registro": "111", "Nome": "Ele M", "Cargo": "Eletricista", "Turno": "M", "Aniversario": "26/11/2023", "Imagem": "teste.png"},
+    {"Registro": "222", "Nome": "Ele 1", "Cargo": "Eletricista", "Turno": "1", "Aniversario": "26/11/2023", "Imagem": "teste.png"},
+    {"Registro": "333", "Nome": "Ele 2", "Cargo": "Eletricista", "Turno": "2", "Aniversario": "26/11/2023", "Imagem": "teste.png"},
+    {"Registro": "444", "Nome": "Ele 3", "Cargo": "Eletricista", "Turno": "3", "Aniversario": "26/11/2023", "Imagem": "teste.png"},
+    {"Registro": "1", "Nome": "Mec M", "Cargo": "Mecanico", "Turno": "M", "Aniversario": "26/11/2023", "Imagem": "teste.png"},
+    {"Registro": "2", "Nome": "Mec 1", "Cargo": "Mecanico", "Turno": "1", "Aniversario": "26/11/2023", "Imagem": "teste.png"},
+    {"Registro": "3", "Nome": "Mec 2", "Cargo": "Mecanico", "Turno": "2", "Aniversario": "26/11/2023", "Imagem": "teste.png"},
+    {"Registro": "4", "Nome": "Mec 3", "Cargo": "Mecanico", "Turno": "3", "Aniversario": "26/11/2023", "Imagem": "teste.png"}
+]
