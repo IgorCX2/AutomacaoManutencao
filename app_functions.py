@@ -1,112 +1,94 @@
 import time
-import customtkinter
-from datetime import datetime
-from frame_pcf import FramePcf
-from frame_lotto import FrameLotto
-from frame_aprovarlotto import FrameAprovaLotto
-from frame_adm import FrameAdm
+import requests
+import json
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium import webdriver
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from functions_share import carregar_maquina, buscar_maquina_nome
 
 def reiniciar_temporizador(app, event):
     app.tempo_inativo = time.time()
 
-def verificar_inatividade(app):
-    app.after(1000, lambda: verificar_inatividade(app))
+def acessar_pcFactory():
+    print("ACESSAR API")
+    maquinaLista = carregar_maquina()
+    url = "http://10.36.216.25:9095/maps/v1"
+    response = requests.get(url)
 
-    if time.time() - app.tempo_inativo > 120:
-        app.mostrar_pagina_descanso()
-        app.pagina_ativa = None
+    if response.status_code == 200:
+        dados_api = response.json()
+        resultados = []
+
+        for item in dados_api:
+            local = item.get("name")
+            for maquinas in item["resources"]:
+                maquina = maquinas.get("code")
+                cod = maquinas.get("statusCode")
+                if cod == "0409":
+                    resultado = maquina
+                    maquinaInfo = buscar_maquina_nome(maquina, maquinaLista)
+                    print(maquinaInfo)
+                    servico = webdriver.ChromeService()
+                    navegador = webdriver.Chrome(service=servico)
+                    navegador.get("http://10.36.216.25:9097") #entrar no site
+                    WebDriverWait(navegador, 120).until(
+                        EC.visibility_of_element_located((By.XPATH, '//*[@id="user"]')) #escrever no login
+                    ).send_keys('31231')
+                    WebDriverWait(navegador, 120).until(
+                        EC.visibility_of_element_located((By.XPATH, '//*[@id="password"]')) #escrever no login
+                    ).send_keys('31231')
+                    WebDriverWait(navegador, 120).until(
+                        EC.element_to_be_clickable((By.XPATH, '/html/body/app-root/app-authentication/div/div/div/div[2]/form/app-button[1]/button'))
+                    ).click()
+                    time.sleep(2)
+                    navegador.get("http://10.36.216.25:9097/screens/A0028")
+                    WebDriverWait(navegador, 120).until(
+                        EC.visibility_of_element_located((By.XPATH, '//*[@id="resource-status"]')) #escrever no login
+                    ).send_keys(maquina)
+                    WebDriverWait(navegador, 120).until(
+                        EC.element_to_be_clickable((By.XPATH, '//*[@id="desktop"]/div/div[1]/div/span'))
+                    ).click()
+                    WebDriverWait(navegador, 120).until(
+                        EC.element_to_be_clickable((By.XPATH, '//*[@id="desktop"]/div/div[2]/app-input-date-picker/div/form/div/app-button/button'))
+                    ).click()
+                    WebDriverWait(navegador, 120).until(
+                        EC.element_to_be_clickable((By.XPATH, '//*[@id="desktop"]/div/div[2]/app-input-date-picker/div/form/lib-angular-mydatepicker-calendar/div/div/lib-footer-bar/div/button'))
+                    ).click()
+                    WebDriverWait(navegador, 120).until(
+                        EC.element_to_be_clickable((By.XPATH, '//*[@id="btn-filter"]/button'))
+                    ).click()
+                    element = WebDriverWait(navegador, 120).until(
+                        EC.visibility_of_element_located((By.XPATH, '/html/body/app-root/app-home/div/main/app-screens-page/app-dyn-page/app-a0028/div/app-a0028-edit-status-resource/div[3]'))
+                    )
+                    entries = element.find_elements(By.XPATH, './div')
+                    if entries:
+                        last_entry = entries[-1]
+                        last_entry_text = last_entry.find_element(By.XPATH, './div/div[2]/div[3]/ppi-field/div/div').text
+                        print(last_entry_text)
+                    else:
+                        print("Nenhuma entrada encontrada")
+
+    else:
+        print(f"Falha na requisição. Código de status: {response.status_code}")
+def Temporizador(app):
+    app.after(1000, lambda: Temporizador(app))
+    #app.temporizador_contador+=1
+    #if(app.temporizador_contador == 15):
+        #acessar_pcFactory()
+        #app.temporizador_contador=0
+    if time.time() - app.tempo_inativo > 5:
+        if(app.pagina_ativa == "descanso"):
+            return 0
+        app.navigate_to_page("descanso", None)
         return 0
-    elif app.pagina_ativa != None:
+    elif app.pagina_ativa != "descanso":
         return 0
     else:
-        app.mostrar_pagina_principal()
+        app.navigate_to_page("home", None)
         return 0
-
-#Adc caminho das novas paginas
-
-def mostrar_aprovarlotto(app, user):
-    app.frame_adm.pack_forget()
-    app.frame_lotto.pack_forget()
-    app.frame_descanso.pack_forget()
-    app.frame_principal.pack_forget()
-    app.frame_pcf.pack_forget()
-    app.frame_login.pack_forget()
-    app.frame_aprovarlotto = FrameAprovaLotto(app, user) 
-    app.frame_aprovarlotto.pack()
-
-def mostrar_pagina_login(app):
-    app.frame_adm.pack_forget()
-    app.frame_lotto.pack_forget()
-    app.frame_descanso.pack_forget()
-    app.frame_principal.pack_forget()
-    app.frame_pcf.pack_forget()
-    app.frame_aprovarlotto.pack_forget()
-    app.frame_login.pack()
-
-def mostrar_pagina_adm(app,user):
-    app.frame_lotto.pack_forget()
-    app.frame_descanso.pack_forget()
-    app.frame_principal.pack_forget()
-    app.frame_pcf.pack_forget()
-    app.frame_login.pack_forget()
-    app.frame_aprovarlotto.pack_forget()
-    app.frame_adm = FrameAdm(app, user)
-    app.frame_adm.pack()
-
-def mostrar_pagina_pcf(app, cod):
-    app.title("Reporte"+" "+cod)
-    app.geometry("{0}x{1}+0+0".format(app.winfo_screenwidth(), app.winfo_screenheight())) 
-    app.frame_adm.pack_forget()
-    app.frame_login.pack_forget()
-    app.frame_lotto.pack_forget()
-    app.frame_descanso.pack_forget()
-    app.frame_principal.pack_forget()
-    app.frame_aprovarlotto.pack_forget()
-    app.frame_pcf = FramePcf(app, cod) 
-    app.frame_pcf.pack()
-
-def mostrar_pagina_principal(app):
-    app.title("Sistema Manutenção")
-    app.geometry("{0}x{1}+0+0".format(app.winfo_screenwidth(), app.winfo_screenheight()))
-    app.frame_adm.pack_forget()
-    app.frame_login.pack_forget()
-    app.frame_pcf.pack_forget()
-    app.frame_lotto.pack_forget()
-    app.frame_descanso.pack_forget()
-    app.frame_aprovarlotto.pack_forget()
-    app.frame_principal.pack()
-
-def mostrar_pagina_descanso(app):
-    app.title("Tela em Construção")
-    app.geometry("{0}x{1}+0+0".format(app.winfo_screenwidth(), app.winfo_screenheight()))
-    app.frame_adm.pack_forget()
-    app.frame_pcf.pack_forget()
-    app.frame_login.pack_forget()
-    app.frame_lotto.pack_forget()
-    app.frame_principal.pack_forget()
-    app.frame_aprovarlotto.pack_forget()
-    app.frame_descanso.pack()
-
-def mostrar_pagina_lotto(app, modal,usuario, maquina):
-    app.geometry("{0}x{1}+0+0".format(app.winfo_screenwidth(), app.winfo_screenheight()))
-    app.frame_adm.pack_forget()
-    data_atual = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
-    app.frame_login.pack_forget()
-    app.frame_descanso.pack_forget()
-    app.frame_principal.pack_forget()
-    app.frame_aprovarlotto.pack_forget()
-    if modal == "Modal":
-        janela_lotto_modal = customtkinter.CTk()
-        janela_lotto_modal.geometry("{0}x{1}+0+0".format("1050", app.winfo_screenheight()))
-        janela_lotto_modal.title("Lotto Modal")
-
-        frame_lotto_modal = FrameLotto(janela_lotto_modal, modal, usuario, maquina, data_atual)
-        frame_lotto_modal.pack()
-
-        janela_lotto_modal.protocol("WM_DELETE_WINDOW", janela_lotto_modal.destroy)
-        janela_lotto_modal.mainloop()
-    else:
-        app.title("Lotto")
-        app.frame_pcf.pack_forget()
-        app.frame_lotto = FrameLotto(app, None,  None,  None, data_atual) 
-        app.frame_lotto.pack()
